@@ -286,7 +286,7 @@ const main = async () => {
     console.log('Closing Browser...');
     await browser.close();
     // Write status to file
-    await fs.writeFileSync('data/status.json', JSON.stringify(fileData))
+    fs.writeFileSync('data/status.json', JSON.stringify(fileData))
 };
 
 main();
