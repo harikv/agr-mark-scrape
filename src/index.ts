@@ -225,7 +225,8 @@ const crawl = async (browser: puppeteer.Browser, state: string, date: DateObj, f
     if (extractedData !== null) {        
         // Store data in file
         const ws = fs.createWriteStream(filePath, { flags: 'a' });
-        csv.write(extractedData, {headers: true}).pipe(ws);          
+        csv.write(extractedData, {headers: true, writeHeaders: false}).pipe(ws);
+        ws.write('\n');          
         // Go back
         // await page.waitFor('#cphBody_btnBack');
         // await page.waitFor(10000);            
@@ -272,14 +273,14 @@ const main = async () => {
                             }                                
                         }
                         fileData[state] = stateStatus;
-                        await fs.writeFileSync('data/status.json', JSON.stringify(fileData))
+                        fs.writeFileSync('data/status.json', JSON.stringify(fileData))
                     }                        
                 } catch (error) {
                     console.log(error);
                 }
             }
             fileData[state] = stateStatus;            
-            await fs.writeFileSync('data/status.json', JSON.stringify(fileData))                                    
+            fs.writeFileSync('data/status.json', JSON.stringify(fileData))                                    
         }   
     }
     console.log('Closing Browser...');
