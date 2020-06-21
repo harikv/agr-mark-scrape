@@ -11,5 +11,7 @@ node compiled/index.js
 
 ### Notes
 Stores status of the run in `data/status.json`
+
 Aggregates data from all states for a given year.
+
 Output files are created in `data/crop_data_{year}.csv`
