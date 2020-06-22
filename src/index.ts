@@ -123,115 +123,136 @@ const extractData = async (state: string, day: number, month: string, year: numb
 }
 
 const getAvailableDays = async(browser: puppeteer.Browser, state: string, month: string, year: number): Promise<DateObj[]> => {
-    const page = await initPage(browser);
-    // Visit Website
-    await page.goto('http://agmarknet.gov.in/PriceAndArrivals/CommodityDailyStateWise_cat.aspx');    
-    // Enter state
-    await page.waitForSelector('#cphBody_cboState');    
-    await page.select('#cphBody_cboState', state);        
-    // Enter month
-    await page.waitForSelector('#cphBody_cboMonth');
-    await page.select('#cphBody_cboMonth', month);    
-    // Enter year
-    await page.waitForSelector('#cphBody_cboYear');
-    await page.select('#cphBody_cboYear', year.toString());
-    const monthObj = {
-        month: month,
-        year: year
-    };
-    // Wait for calendar to load
-    await page.waitForFunction( (monthObj) => {
-        const calendarTitleElem = document.querySelector('#cphBody_Calendar1 > tbody:nth-child(1) > tr:nth-child(1) > td:nth-child(1) > table:nth-child(1) > tbody:nth-child(1) > tr:nth-child(1) > td:nth-child(1)');
-        if (calendarTitleElem !== null) {
-            const calendarTitle = calendarTitleElem.textContent;
-            return calendarTitle === `${monthObj.month} ${monthObj.year}`;
-        } else {
-            return false;
-        }
-    }, {}, monthObj);    
     // Get all days that have data
     const availableDays: DateObj[] = [];
-    const dayLinkDays = await page.$$eval('#cphBody_Calendar1 > tbody > tr > td > a', (elems) => {
-        return elems.map( (elem) => {
-            return Number(elem.textContent);
-        })
-    });
-    for (const day of dayLinkDays) {
-        availableDays.push({
-            day: day,
+    const page = await initPage(browser);
+    try {        
+        // Visit Website
+        await page.goto('http://agmarknet.gov.in/PriceAndArrivals/CommodityDailyStateWise_cat.aspx');    
+        // Enter state
+        await page.waitForSelector('#cphBody_cboState');    
+        await page.select('#cphBody_cboState', state);        
+        // Enter month
+        await page.waitForSelector('#cphBody_cboMonth');
+        await page.select('#cphBody_cboMonth', month);    
+        // Enter year
+        await page.waitForSelector('#cphBody_cboYear');
+        await page.select('#cphBody_cboYear', year.toString());
+        const monthObj = {
             month: month,
             year: year
+        };
+        // Wait for calendar to load
+        await page.waitForFunction( (monthObj) => {
+            const calendarTitleElem = document.querySelector('#cphBody_Calendar1 > tbody:nth-child(1) > tr:nth-child(1) > td:nth-child(1) > table:nth-child(1) > tbody:nth-child(1) > tr:nth-child(1) > td:nth-child(1)');
+            if (calendarTitleElem !== null) {
+                const calendarTitle = calendarTitleElem.textContent;
+                return calendarTitle === `${monthObj.month} ${monthObj.year}`;
+            } else {
+                return false;
+            }
+        }, {}, monthObj);            
+        const dayLinkDays = await page.$$eval('#cphBody_Calendar1 > tbody > tr > td > a', (elems) => {
+            return elems.map( (elem) => {
+                return Number(elem.textContent);
+            })
         });
+        for (const day of dayLinkDays) {
+            availableDays.push({
+                day: day,
+                month: month,
+                year: year
+            });
+        }
+        return availableDays;
+    } catch (error) {
+        console.log(`Error while getting Available days for ${state} ${month} ${year}`);
+        console.log(error);
+        return availableDays;
+    } finally {
+        await page.close();           
     }
-    await page.close();    
-    return availableDays;
 }
 
 const crawl = async (browser: puppeteer.Browser, state: string, date: DateObj, filePath: string): Promise<boolean> => {
     console.log(`Getting data for ${date.day} ${date.month} ${date.year} for state: ${state}`);               
     const page = await initPage(browser);
-    // Visit Website
-    await page.goto('http://agmarknet.gov.in/PriceAndArrivals/CommodityDailyStateWise_cat.aspx');    
-    // Enter state
-    await page.waitForSelector('#cphBody_cboState');    
-    await page.select('#cphBody_cboState', state);    
-    // Enter month
-    await page.waitForSelector('#cphBody_cboMonth');
-    await page.select('#cphBody_cboMonth', date.month);    
-    // Enter year
-    await page.waitForSelector('#cphBody_cboYear');
-    await page.select('#cphBody_cboYear', date.year.toString());    
-    const monthObj = {
-        month: date.month,
-        year: date.year
-    };
-    // Wait for calendar to load
-    await page.waitForFunction( (monthObj) => {
-        const calendarTitleElem = document.querySelector('#cphBody_Calendar1 > tbody:nth-child(1) > tr:nth-child(1) > td:nth-child(1) > table:nth-child(1) > tbody:nth-child(1) > tr:nth-child(1) > td:nth-child(1)');
-        if (calendarTitleElem !== null) {
-            const calendarTitle = calendarTitleElem.textContent;
-            return calendarTitle === `${monthObj.month} ${monthObj.year}`;
+    try {
+        // Visit Website
+        await page.goto('http://agmarknet.gov.in/PriceAndArrivals/CommodityDailyStateWise_cat.aspx');    
+        // Enter state
+        await page.waitForSelector('#cphBody_cboState');    
+        await page.select('#cphBody_cboState', state);    
+        // Enter month
+        await page.waitForSelector('#cphBody_cboMonth');
+        await page.select('#cphBody_cboMonth', date.month);    
+        // Enter year
+        await page.waitForSelector('#cphBody_cboYear');
+        await page.select('#cphBody_cboYear', date.year.toString());    
+        const monthObj = {
+            month: date.month,
+            year: date.year
+        };
+        // Wait for calendar to load
+        await page.waitForFunction( (monthObj) => {
+            const calendarTitleElem = document.querySelector('#cphBody_Calendar1 > tbody:nth-child(1) > tr:nth-child(1) > td:nth-child(1) > table:nth-child(1) > tbody:nth-child(1) > tr:nth-child(1) > td:nth-child(1)');
+            if (calendarTitleElem !== null) {
+                const calendarTitle = calendarTitleElem.textContent;
+                return calendarTitle === `${monthObj.month} ${monthObj.year}`;
+            } else {
+                return false;
+            }
+        }, {}, monthObj);    
+        // Get all days that have data
+        const dayLinkElems = await page.$$('#cphBody_Calendar1 > tbody > tr > td > a');
+        const dayLinkDays = await page.$$eval('#cphBody_Calendar1 > tbody > tr > td > a', (elems) => {
+            return elems.map( (elem) => {
+                return Number(elem.textContent);
+            })
+        });   
+        const dayLinkObjs = _.zipObject(dayLinkDays, dayLinkElems);    
+        // const dayLinks = await page.$$eval('#cphBody_Calendar1 > tbody > tr > td > a', (elems) => { 
+        //     return elems.map((elem) => { 
+        //         return elem.getAttribute('href')
+        //     }) 
+        // });    
+        // console.log(dayLinks);
+        // Visit required day
+        const reqdDay: puppeteer.ElementHandle<Element> | null = _.get(dayLinkObjs, date.day, null);
+        if (reqdDay === null) {
+            return false;
+        }    
+        reqdDay.click();
+        // Click to view report
+        try {
+            await page.waitFor('#cphBody_btnSubmit', { timeout: 10000 });
+        } catch (buttonNotFoundErr) {
+            console.log(`Unable to find data for ${state} ${date.day} ${date.month} ${date.year}`);
+            console.log(buttonNotFoundErr);
+            await page.close();
+            return false;
+        }
+        await page.click('#cphBody_btnSubmit');
+        // Construct payload for context and obtain data from the page
+        await page.waitFor('table#cphBody_gridRecords');
+        const extractedData = await page.evaluate(extractData, state, date.day, date.month, date.year);        
+        if (extractedData !== null) {        
+            // Store data in file
+            const ws = fs.createWriteStream(filePath, { flags: 'a' });
+            csv.write(extractedData, {headers: true, writeHeaders: false}).pipe(ws);
+            ws.write('\n');
+            await page.close();          
+            // Go back
+            // await page.waitFor('#cphBody_btnBack');
+            // await page.waitFor(10000);            
+            return true;
         } else {
             return false;
         }
-    }, {}, monthObj);    
-    // Get all days that have data
-    const dayLinkElems = await page.$$('#cphBody_Calendar1 > tbody > tr > td > a');
-    const dayLinkDays = await page.$$eval('#cphBody_Calendar1 > tbody > tr > td > a', (elems) => {
-        return elems.map( (elem) => {
-            return Number(elem.textContent);
-        })
-    });   
-    const dayLinkObjs = _.zipObject(dayLinkDays, dayLinkElems);    
-    // const dayLinks = await page.$$eval('#cphBody_Calendar1 > tbody > tr > td > a', (elems) => { 
-    //     return elems.map((elem) => { 
-    //         return elem.getAttribute('href')
-    //     }) 
-    // });    
-    // console.log(dayLinks);
-    // Visit required day
-    const reqdDay: puppeteer.ElementHandle<Element> | null = _.get(dayLinkObjs, date.day, null);
-    if (reqdDay === null) {
-        return false;
-    }    
-    reqdDay.click();
-    // Click to view report
-    await page.waitFor('#cphBody_btnSubmit');
-    await page.click('#cphBody_btnSubmit');
-    // Construct payload for context and obtain data from the page
-    await page.waitFor('table#cphBody_gridRecords');
-    const extractedData = await page.evaluate(extractData, state, date.day, date.month, date.year);
-    await page.close();
-    if (extractedData !== null) {        
-        // Store data in file
-        const ws = fs.createWriteStream(filePath, { flags: 'a' });
-        csv.write(extractedData, {headers: true, writeHeaders: false}).pipe(ws);
-        ws.write('\n');          
-        // Go back
-        // await page.waitFor('#cphBody_btnBack');
-        // await page.waitFor(10000);            
-        return true;
-    } else {
+    } catch (error) {
+        console.log(`Error while crawling for ${state} ${date.day}  ${date.month} ${date.year}`);
+        console.log(error);
+        await page.close();
         return false;
     }
 };
@@ -255,29 +276,26 @@ const main = async () => {
             console.log(`Crawling ${state}...`);                                              
             // Crawl all months
             for (const month of months) {
-                // Get all days which have data
-                try {
-                    console.log(`Crawling month: ${month} for state: ${state}`);                
-                    const availableDays = await getAvailableDays(browser, state, month, year);                                  
-                    // Temporarily restrict availableDays to 2 days for easier crawling;
-                    // const tempDays = [availableDays[0]];
-                    for (const dateObj of availableDays) {
-                    // for (const dateObj of tempDays) {
-                        if (_.find(stateStatus.completed, dateObj) === undefined) {
-                            const timeStart = performance.now();
-                            const dayStatus = await crawl(browser, state, dateObj, filePath);
-                            const timeEnd = performance.now();
-                            console.log(`Crawl took ${timeEnd - timeStart} ms`);
-                            if (dayStatus === true) {
-                                stateStatus.completed.push(dateObj);                                    
-                            }                                
-                        }
-                        fileData[state] = stateStatus;
-                        fs.writeFileSync('data/status.json', JSON.stringify(fileData))
-                    }                        
-                } catch (error) {
-                    console.log(error);
-                }
+                // Get all days which have data                
+                console.log(`Getting valid days for month: ${month} ${year} for state: ${state}`);                
+                const availableDays = await getAvailableDays(browser, state, month, year);         
+                console.log(`Found ${availableDays.length} days for ${month} ${year} for state: ${state}`);
+                // Temporarily restrict availableDays to 2 days for easier crawling;
+                // const tempDays = [availableDays[0]];
+                for (const dateObj of availableDays) {
+                // for (const dateObj of tempDays) {
+                    if (_.find(stateStatus.completed, dateObj) === undefined) {
+                        const timeStart = performance.now();
+                        const dayStatus = await crawl(browser, state, dateObj, filePath);
+                        const timeEnd = performance.now();
+                        console.log(`Crawl took ${timeEnd - timeStart} ms`);
+                        if (dayStatus === true) {
+                            stateStatus.completed.push(dateObj);                                    
+                        }                                
+                    }
+                    fileData[state] = stateStatus;
+                    fs.writeFileSync('data/status.json', JSON.stringify(fileData))
+                }                                       
             }
             fileData[state] = stateStatus;            
             fs.writeFileSync('data/status.json', JSON.stringify(fileData))                                    
