@@ -1,7 +1,7 @@
 # Custom ignores
 .vscode/
 compiled/
-data/*.csv
+data/**/*.csv
 
 # Logs
 logs
